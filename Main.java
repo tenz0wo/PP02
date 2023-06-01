@@ -4,19 +4,20 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.List;
+import java.lang.annotation.Annotation;
+import java.nio.file.Path;
+import java.util.*;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
-import java.util.ArrayList;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import java.nio.file.Files;
+
 public class Main {
     public static void main(String[] args) throws Exception {
-        JarFile jarFile = new JarFile("C:\\\\Users\\\\tenz0\\\\IdeaProjects\\\\main1\\\\src\\\\main\\\\java\\\\org\\\\example\\\\FXKu.jar");
+        JarFile jarFile = new JarFile("/Users/tenzo/Desktop/JavaProjects/TraningJava/untitled/src/main/java/org/example/FXKu.jar");
         Enumeration entries = jarFile.entries();
 
         ArrayList<String> controllerPaths = new ArrayList<>();
@@ -38,7 +39,7 @@ public class Main {
     }
 
     private static boolean checkValid(String path, String regex) {
-        try (BufferedReader reader = new BufferedReader(new FileReader("C:\\Users\\tenz0\\IdeaProjects\\main1\\src\\main\\result\\FXKu\\" + path))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader("/Users/tenzo/Desktop/JavaProjects/TraningJava/untitled/src/main/result/FXKu/" + path))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 Pattern pattern = Pattern.compile(regex);
@@ -48,38 +49,129 @@ public class Main {
                 }
             }
             return false;
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private static void linksMap(String path) {
+    private static void linksMap(String pathController) {
         String targetPattern = "private";
-        HashMap<String, ArrayList> linkRatio = new HashMap<>();
+        HashMap<String, List> linkRatio = new HashMap<>();
+        HashMap<String, String> tableQuery = new HashMap<>();
         List<String> contents = new ArrayList<>();
 
-        try (BufferedReader br = new BufferedReader(new FileReader("C:/Users/tenz0/IdeaProjects/main1/src/main/result/FXKu/" + path))) {
+        try (BufferedReader br = new BufferedReader(new FileReader("/Users/tenzo/Desktop/JavaProjects/TraningJava/untitled/src/main/result/FXKu/" + pathController))) {
             String line;
             while ((line = br.readLine()) != null) {
                 if (line.contains(targetPattern)) {
-                    Pattern pattern = Pattern.compile("@Table\\(\n\s+name = \".+\"");
+                    Pattern pattern = Pattern.compile("private JInvTable\\<.+\\>");
                     Matcher matcher = pattern.matcher(line);
                     if (matcher.find()) {
-                        String content = matcher.group(1);
-                        contents.add(content);
+                        String content = matcher.group(0);
+                        List retLink = cutArray(Collections.singletonList((content)));
+                        contents.add(retLink.toString());
+
                     }
                 }
             }
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        System.out.println(contents);
+
+        for (String content : contents) {
+            String pathTable = String.valueOf(pathController.substring(0, pathController.lastIndexOf("/")) + "/" + content.replaceAll("\\[", "").replaceAll("\\]", "") + ".java");
+            String query = parseQuery("/Users/tenzo/Desktop/JavaProjects/TraningJava/untitled/src/main/result/FXKu/" + pathTable);
+            if (linkRatio.containsKey(pathController)) {
+                linkRatio.get(pathController).add(pathTable);
+            } else {
+                List<String> retLinks = new ArrayList<>();
+                retLinks.add(pathTable.replaceAll("\\s", ""));
+                linkRatio.put(pathController, retLinks);
+            }
+            if (query != null) {
+//                tableQuery.put(content, query);
+                tableQuery.put(content, cutQuery(query));
+
+            }
+        }
+
+        System.out.println(tableQuery);
+    }
+
+    private static String cutQuery(String query) {
+        String X = query.replaceAll("^.+query", "").replaceAll("^.+?\"", "").replaceAll("\".+?\"", "").replaceAll("\n", "");
+        return X;
+    }
+
+
+    private static List cutArray(List<String> rtLink) {
+        List<String> linksArray = new ArrayList<>();
+        for (String link : rtLink) {
+            int startIndex = link.indexOf("<") + 1;
+            int endIndex = link.indexOf(">");
+            String trimmedLink = link.substring(startIndex, endIndex);
+            linksArray.add(trimmedLink);
+        }
+        return linksArray;
+    }
+
+    private static String parseQuery(String pathFile) {
+        String targetPattern = "@NamedNativeQuery";
+        if (Files.exists(Path.of(pathFile))) {
+            try (BufferedReader br = new BufferedReader(new FileReader(pathFile))) {
+                String line;
+                Integer countOpenBracket = 0;
+                boolean flagStartCountBracket = false;
+                String resultLine = "";
+                while ((line = br.readLine()) != null) {
+                    if (line.contains(targetPattern) || flagStartCountBracket) {
+                        countOpenBracket = countBracket(line, countOpenBracket);
+                        resultLine += line;
+                        flagStartCountBracket = true;
+                        if (countOpenBracket == 0) {
+                            return resultLine;
+                        }
+                    }
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return null;
+    }
+
+    private static Integer countBracket(String bracketLine, Integer countOpenBracket) {
+        for (int i=0; i<bracketLine.length(); i++){
+            if (bracketLine.charAt(i) == '('){
+                countOpenBracket++;
+            }
+            if (bracketLine.charAt(i) == ')'){
+                countOpenBracket--;
+            }
+        }
+        return countOpenBracket;
     }
 }
+
+//        try (BufferedReader reader = new BufferedReader(new FileReader(pathTable))) {
+//            String line;
+//            String query = null;
+//            while ((line = reader.readLine()) != null) {
+//                Pattern pattern = Pattern.compile(regex);
+//                Matcher matcher = pattern.matcher(line);
+//                if (matcher.find()) {
+//                    return query;
+//                }
+//            }
+//            return null;
+//        } catch (FileNotFoundException e) {
+//            throw new RuntimeException(e);
+//        } catch (IOException e) {
+//            throw new RuntimeException(e);
+//        }
+
+
+
 
 //        private static void extractParameters(String path) {
 //        try (BufferedReader reader = new BufferedReader(new FileReader("C:\\Users\\tenz0\\IdeaProjects\\main1\\src\\main\\result\\FXKu\\" + path))) {
