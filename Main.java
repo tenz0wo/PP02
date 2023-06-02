@@ -103,7 +103,6 @@ public class Main {
         return X;
     }
 
-
     private static List cutArray(List<String> rtLink) {
         List<String> linksArray = new ArrayList<>();
         for (String link : rtLink) {
