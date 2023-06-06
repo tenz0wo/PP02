@@ -4,13 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Controllers {
-    ArrayList <ControllerFolder> controllerList;
+    List <ControllerFolder> controllerList;
 
-    public ArrayList <ControllerFolder> getControllerList(){
+    public List <ControllerFolder> getControllerList(){
         return controllerList;
     }
 
-    public void setControllerList(ArrayList <ControllerFolder> controllerList){
+    public void setControllerList(List <ControllerFolder> controllerList){
         this.controllerList = controllerList;
     }
 }

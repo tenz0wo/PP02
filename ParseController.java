@@ -15,7 +15,7 @@ public class ParseController {
     public String findTables(String pathController) {
         listTable = new ArrayList<>();
         String targetPattern = "private";
-        try (BufferedReader br = new BufferedReader(new FileReader("C:\\Users\\Koryshev.INVERSION\\IdeaProjects\\untitled\\src\\main\\result\\FXKu\\" + pathController))) {
+        try (BufferedReader br = new BufferedReader(new FileReader("C:\\\\Users\\\\Koryshev.INVERSION\\\\IdeaProjects\\\\untitled\\\\src\\\\main\\\\result\\\\FXKu\\\\" + pathController))) {
             return findForeignTable(br, targetPattern);
         } catch (IOException e) {
             throw new RuntimeException(e);

@@ -1,26 +1,30 @@
 package ru.inversion;
 
-import ru.inversion.models.Controller;
-
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ParsePath {
-    ArrayList<String> controllerPaths = new ArrayList<>();
-    JarFile jarFile = new JarFile("C:\\Users\\Koryshev.INVERSION\\IdeaProjects\\untitled\\src\\main\\java\\ru\\inversion\\FXKu.jar");
+
+    HashMap<String, String> controllerFolders = new HashMap<>();
+    String jarFilePath = "C:\\Users\\Koryshev.INVERSION\\IdeaProjects\\untitled\\src\\main\\java\\ru\\inversion\\FXKu.jar";
 
     public ParsePath() throws IOException {
     }
 
+    public JarFile openJarFile(String path) throws IOException {
+        JarFile jarFile = new JarFile(path);
+        return jarFile;
+    }
     public boolean checkExistTable(String path, String regex) {
-        try (BufferedReader reader = new BufferedReader(new FileReader("C:\\Users\\Koryshev.INVERSION\\IdeaProjects\\untitled\\src\\main\\result\\FXKu\\" + path))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader("C:\\\\Users\\\\Koryshev.INVERSION\\\\IdeaProjects\\\\untitled\\\\src\\\\main\\\\result\\\\FXKu\\\\" + path))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 Pattern pattern = Pattern.compile(regex);
@@ -35,20 +39,43 @@ public class ParsePath {
         }
     }
 
-    public void findControllerPath() throws IOException {
-        Enumeration entries = jarFile.entries();
-        controllerPaths = new ArrayList<>();
-        ArrayList<Controller> controller= new ArrayList<>();
+    public ArrayList<String> findControllerPathFiles(String pathFolder) throws IOException {
+        ArrayList<String> controllerPaths = new ArrayList<>();
+
+        JarFile jarFile = openJarFile(jarFilePath);
+        Enumeration<JarEntry> entries = jarFile.entries();
 
         while (entries.hasMoreElements()) {
             JarEntry entry = (JarEntry) entries.nextElement();
             String name = entry.getName();
-            if (name.endsWith("Controller.java")) {
+            if (name.endsWith("Controller.java") && (extractPathFolder(name).equals(pathFolder))) {
                 if (checkExistTable(name, "Table<([^>]+)>\\s+([^;]+);")) {
                     controllerPaths.add(name);
                 }
             }
         }
         jarFile.close();
+        return controllerPaths;
     }
+
+    public void findControllerPathFolders() throws IOException {
+        JarFile jarFile = openJarFile(jarFilePath);
+        Enumeration<JarEntry> entries = jarFile.entries();
+        controllerFolders = new HashMap<>();
+
+        while (entries.hasMoreElements()) {
+            JarEntry entry = (JarEntry) entries.nextElement();
+            String pathFile = entry.getName();
+            if (pathFile.endsWith("Controller.java")) {
+                controllerFolders.put(extractPathFolder(pathFile), extractPathFolder(pathFile));
+            }
+        }
+        jarFile.close();
+    }
+
+    private String extractPathFolder(String path){
+        String subPath = path.substring(0, path.lastIndexOf('/'));
+        return subPath;
+    }
+
 }

@@ -1,10 +1,10 @@
 package ru.inversion.models;
 
-import java.util.ArrayList;
+import java.util.List;
 
 public class ControllerFolder {
     String folderPath;
-    ArrayList<Controller> controllers;
+    List<Controller> controllers;
 
     public String getFolderPath(){
         return folderPath;
@@ -14,11 +14,11 @@ public class ControllerFolder {
         this.folderPath = folderPath;
     }
 
-    public ArrayList<Controller> getControllers() {
+    public List<Controller> getControllers() {
         return controllers;
     }
 
-    public void setControllers(ArrayList<Controller> controllers) {
+    public void setControllers(List<Controller> controllers) {
         this.controllers = controllers;
     }
 }

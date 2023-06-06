@@ -13,34 +13,38 @@ public class ControllerDBLinks {
     ParsePath parsePath = new ParsePath();
     ParseController parseController = new ParseController();
     ParseQuery parseQuery = new ParseQuery();
-    ControllerFolder folder = new ControllerFolder();
     ArrayList<ControllerTable> listControllerTable = new ArrayList<>();
-    ArrayList<ControllerFolder> listFolfer = new ArrayList<>();
     ControllerDBLinks() throws IOException {
-        parsePath.findControllerPath();
-        String oldPath = parsePath.controllerPaths.get(0);
-        Controller controller= new Controller();
-        ArrayList<Controller> listControllers= new ArrayList<>();
-        for (String path : parsePath.controllerPaths) {
-            fillHashTables(path);
-            controller.setTables(listControllerTable);
-            controller.setPath(path);
-            listControllers.add(controller);
-            controller = new Controller();
-            if (!oldPath.equals(path)) {
-                folder.setFolderPath(path);
-                folder.setControllers(listControllers);
-                listFolfer.add(folder);
-                folder = new ControllerFolder();
-            } else {
-                folder.setFolderPath(oldPath);
-                folder.setControllers(listControllers);
+        Controller controller;
+        List<Controller> listControllers;
+        ControllerFolder folder;
+        List<ControllerFolder> folders = new ArrayList<>();
+
+        parsePath.findControllerPathFolders();
+
+        for (String path : parsePath.controllerFolders.keySet()) {
+            listControllers = new ArrayList<>();
+            for (String pathFile : findPathFile(path)){
+                fillHashTables(pathFile);
+                controller = new Controller();
+                controller.setTables(listControllerTable);
+                controller.setPath(pathFile);
+                listControllers.add(controller);
             }
-            oldPath = path;
+
+            folder = new ControllerFolder();
+            folder.setFolderPath(path);
+            folder.setControllers(listControllers);
+            folders.add(folder);
         }
-        controllers.setControllerList(listFolfer);
+        controllers.setControllerList(folders);
 
         System.out.println("+");
+    }
+
+
+    private ArrayList<String> findPathFile(String pathFolder) throws IOException {
+        return parsePath.findControllerPathFiles(pathFolder);
     }
 
     private void fillHashTables(String pathController) {
@@ -57,7 +61,7 @@ public class ControllerDBLinks {
                 addQueryToList(tableQuery, table, query);
                 addControllerTable(pathController, table, tableQuery);
                 tableQuery = new HashMap<>();
-            } else if (query == null) {
+            } else {
                 addNoneQueryToList(tableQuery, table);
                 addNoneControllerTable(pathController, table);
                 tableQuery = new HashMap<>();
@@ -70,7 +74,7 @@ public class ControllerDBLinks {
     }
 
     private String executeQuery(String pathTable) {
-        return parseQuery.executeQuery("C:\\Users\\Koryshev.INVERSION\\IdeaProjects\\untitled\\src\\main\\result\\FXKu\\" + pathTable);
+        return parseQuery.executeQuery("C:\\\\Users\\\\Koryshev.INVERSION\\\\IdeaProjects\\\\untitled\\\\src\\\\main\\\\result\\\\FXKu\\\\" + pathTable);
     }
 
     private void addQueryToList(HashMap<String, String> tableQuery, String tableName, String query) {
